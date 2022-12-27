@@ -1,0 +1,77 @@
+
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  </head>
+  <body>
+    <h1>Чат</h1>
+    <div>
+      <div id="chatbox">
+        <p class="Chat"></p>
+      </div>
+      <div id="userInput">
+          <input id="textInput" type="text" name="msg" placeholder="Сообщение...">
+          <input id="buttonInput" type="submit" value="Отправить">
+      </div>
+      <script>
+        let message = "Введите серийный номер вашего устройства";
+        let lastIdMessage = 0;
+        let isFirst = true;
+        function getBotResponse() {
+          var rawText = $("#textInput").val();
+          var userHtml = '<p class="userText"><span>' + rawText + '</span></p>';
+
+          $("#textInput").val("");
+          $("#chatbox").append(userHtml);
+          document.getElementById('userInput').scrollIntoView({block: 'start', behavior: 'smooth'});
+          setInterval(() => {
+            $.getJSON("https://api.telegram.org/bot5959422704:AAF5qnJSo-Xwohm3sp6xV7SiLSa5TEtvQ8M/getUpdates", function(data) {
+              if(data["result"][data["result"].length - 1].message.message_id > lastIdMessage) {
+                if(isFirst){
+                  isFirst = false;
+                  lastIdMessage = data["result"][data["result"].length - 1].message.message_id;
+                }
+                else{
+                  message = data["result"][data["result"].length - 1].message.text;
+                  lastIdMessage = data["result"][data["result"].length - 1].message.message_id;
+                }
+                var botHtml = '<p class="botText"><span>' + message + '</span></p>';
+                $("#chatbox").append(botHtml);
+                document.getElementById('userInput').scrollIntoView({block: 'start', behavior: 'smooth'});
+              }
+            })
+          }, 1000);
+          $.get("/", { msg: rawText }).done(function(data) {
+                  $("#chatbox").append(botHtml);
+                  document.getElementById('userInput').scrollIntoView({block: 'start', behavior: 'smooth'});
+          })
+
+        }
+        function post(text) {
+          $.getJSON("https://api.telegram.org/bot5959422704:AAF5qnJSo-Xwohm3sp6xV7SiLSa5TEtvQ8M/sendMessage?chat_id=443420791&text=" + text , function(data) {
+          })
+        }
+        $("#textInput").keypress(function(e) {
+            if ((e.which == 13) && document.getElementById("textInput").value != "" ){
+                post(document.getElementById("textInput").value);
+                getBotResponse();
+            }
+        });
+
+        function new_message(message) {
+          var botHtml = '<p class="botText"><span>' + message + '</span></p>';
+          $("#chatbox").append(botHtml);
+        }
+
+        $("#buttonInput").click(function() {
+          console.log("rawText")
+            if (document.getElementById("textInput").value != "") {
+              post(document.getElementById("textInput").value);
+                getBotResponse();
+            }
+        })
+      </script>
+    </div>
+  </body>
+</html>
